@@ -1,0 +1,31 @@
+ID_Transaccion,Fecha,Cliente,Pais,Sector_Industria,Producto_Plan,Canal_Adquisicion,Ingreso_USD,COGS_USD,Estado_Pago
+TXN-201,2026-01-05,Alpha Retail,Colombia,Retail,Plan Growth,Inbound Web,197.00,32.85,Pagado
+TXN-202,2026-01-08,Banco Capital,México,Fintech,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-203,2026-01-12,Salud Total IPS,Colombia,Salud,Plan Starter,Referido,97.00,19.85,Pagado
+TXN-204,2026-01-15,Global Logistics,Estados Unidos,Logística,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-205,2026-01-18,EduTech Latam,Chile,Educación,Plan Growth,Inbound Web,197.00,32.85,Pagado
+TXN-206,2026-01-22,Financiera Andina,Colombia,Fintech,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-207,2026-01-25,Farmacias Unidas,México,Salud,Plan Growth,Referido,197.00,32.85,Pagado
+TXN-208,2026-01-29,Transportes Sol,Chile,Logística,Plan Starter,Inbound Web,97.00,19.85,Pagado
+TXN-209,2026-02-02,MarketPlace Real,Estados Unidos,Retail,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-210,2026-02-05,Academia Virtual,Colombia,Educación,Plan Growth,Inbound Web,197.00,32.85,Pagado
+TXN-211,2026-02-09,Inversiones Norte,México,Fintech,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-212,2026-02-12,Clínica del Valle,Colombia,Salud,Plan Starter,Inbound Web,97.00,19.85,Pagado
+TXN-213,2026-02-16,Supermercados Ya,Chile,Retail,Plan Growth,Referido,197.00,32.85,Pagado
+TXN-214,2026-02-20,Carga Express,Estados Unidos,Logística,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-215,2026-02-24,Tech University,México,Educación,Plan Starter,Inbound Web,97.00,19.85,Pagado
+TXN-216,2026-02-27,MicroPrestamistas,Colombia,Fintech,Plan Growth,Referido,197.00,32.85,Pagado
+TXN-217,2026-03-02,Retail Group SA,Chile,Retail,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-218,2026-03-06,Hospital Metropolitano,Estados Unidos,Salud,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-219,2026-03-09,Open Courseware,Colombia,Educación,Plan Starter,Inbound Web,97.00,19.85,Pagado
+TXN-220,2026-03-13,Naviera del Caribe,Colombia,Logística,Plan Growth,Referido,197.00,32.85,Pagado
+TXN-221,2026-03-16,Billetera Digital,México,Fintech,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-222,2026-03-20,Boutique Online,Chile,Retail,Plan Starter,Inbound Web,97.00,19.85,Pagado
+TXN-223,2026-03-23,Centro Radiológico,Colombia,Salud,Plan Growth,Inbound Web,197.00,32.85,Pagado
+TXN-224,2026-03-26,Distribuidora Sur,Chile,Logística,Plan Starter,Referido,97.00,19.85,Pagado
+TXN-225,2026-03-29,Smart Campus,Estados Unidos,Educación,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-226,2026-04-02,Seguros Confianza,Colombia,Fintech,Plan Growth,Inbound Web,197.00,32.85,Pagado
+TXN-227,2026-04-06,E-Commerce Plus,México,Retail,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
+TXN-228,2026-04-10,Ambulancias SAS,Colombia,Salud,Plan Starter,Referido,97.00,19.85,Pagado
+TXN-229,2026-04-14,Rutas & Envíos,Chile,Logística,Plan Growth,Inbound Web,197.00,32.85,Pagado
+TXN-230,2026-04-18,Global School Online,Estados Unidos,Educación,Plan Enterprise,Ventas B2B,497.00,69.85,Pagado
