@@ -1,11 +1,11 @@
+"""Compara costos y ahorro operativo de proveedores durante tres años."""
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# ==============================================================================
-# 1. CONFIGURACIÓN VISUAL DEL TABLERO
-# ==============================================================================
+# CONFIGURACIÓN VISUAL DEL TABLERO
 st.set_page_config(
     page_title="FinOps & TCO/ROI Strategic Simulator",
     page_icon="💳",
@@ -17,9 +17,7 @@ st.title("💼 Simulador Estratégico de TI: TCO, ROI y Evaluación de Proveedor
 st.caption("Ingeniería de Sistemas (8vo Semestre) | FinOps & C-Suite Decision Making Engine")
 st.markdown("---")
 
-# ==============================================================================
-# 2. BARRA LATERAL: PARÁMETROS DEL NEGOCIO Y CRECIMIENTO
-# ==============================================================================
+# BARRA LATERAL: PARÁMETROS DEL NEGOCIO Y CRECIMIENTO
 st.sidebar.header("📈 Proyección del Negocio")
 usuarios_año_1 = st.sidebar.number_input(
     "Usuarios Activos Iniciales (Año 1):",
@@ -66,16 +64,14 @@ usuarios_multianual = [u1, u2, u3]
 
 st.sidebar.info(f"👥 **Usuarios Proyectados:**\n* Año 1: {u1:,}\n* Año 2: {u2:,}\n* Año 3: {u3:,}")
 
-# ==============================================================================
-# 3. TABLAS EDITABLES EN VIVO: CREACIÓN DINÁMICA DE ÍTEMS DE COSTO
-# ==============================================================================
+# Costos editables por proveedor.
 st.subheader("📝 Estructura de Costos del Proveedor (Personalización Fila a Fila)")
 st.write(
     "Agrega, edita o elimina conceptos de costo específicos para este proveedor. "
     "El simulador recalcula el TCO y el ROI instantáneamente al modificar la tabla."
 )
 
-# Dataset base editable por defecto según proveedor seleccionado
+# Define los costos iniciales de cada proveedor.
 plantillas_defecto = {
     "Proveedor A: Arquitectura Serverless (AWS / Supabase)": [
         {"Concepto": "Setup Inicial y Migración Cloud", "Categoría": "CapEx (Única Vez)", "Costo Base Anual (USD)": 1800.0, "Costo Variable por Usuario (USD)": 0.00},
@@ -97,12 +93,12 @@ plantillas_defecto = {
     ]
 }
 
-# Inicialización del Session State para que las modificaciones no se borren
+# Conserva los costos editados durante la sesión.
 clave_estado = f"items_costo_{proveedor_activo}"
 if clave_estado not in st.session_state:
     st.session_state[clave_estado] = pd.DataFrame(plantillas_defecto[proveedor_activo])
 
-# Componente interactivo para agregar y editar filas libremente
+# Permite agregar y editar conceptos de costo.
 df_costos_editados = st.data_editor(
     st.session_state[clave_estado],
     num_rows="dynamic",
@@ -127,9 +123,7 @@ df_costos_editados = st.data_editor(
     }
 )
 
-# ==============================================================================
-# 4. MOTOR MATEMÁTICO: CÁLCULO MULTIANUAL DE TCO Y BENEFICIOS
-# ==============================================================================
+# Cálculo de costos y ahorro acumulados.
 # Separación de CapEx (Año 1) de los costos operativos recurrentes
 capex_total = df_costos_editados[df_costos_editados["Categoría"] == "CapEx (Única Vez)"]["Costo Base Anual (USD)"].sum()
 items_recurrentes = df_costos_editados[df_costos_editados["Categoría"] != "CapEx (Única Vez)"]
@@ -157,7 +151,7 @@ for i, cant_usuarios in enumerate(usuarios_multianual):
     tco_anual.append(round(costo_año_total, 2))
     tco_acumulado.append(round(costo_acum, 2))
     
-    # Beneficios generados en el año (Ahorro operativo habilitado + margen de ingresos)
+    # Calcula el ahorro anual como usuarios por ingreso anual por eficiencia.
     ingreso_año = cant_usuarios * ingreso_anual_por_usuario
     ahorro_año = ingreso_año * (ahorro_eficiencia_pct / 100.0)
     beneficio_acum += ahorro_año
@@ -169,9 +163,7 @@ beneficio_bruto_3_años = ingresos_acumulados[-1]
 beneficio_neto_total = beneficio_bruto_3_años - tco_final_3_años
 roi_final_pct = (beneficio_neto_total / tco_final_3_años) * 100 if tco_final_3_años > 0 else 0.0
 
-# ==============================================================================
-# 5. TARJETAS EJECUTIVAS (C-SUITE SCORECARDS)
-# ==============================================================================
+# Indicadores de inversión, costos y rentabilidad.
 st.markdown("---")
 st.subheader("📊 Indicadores Financieros Consolidados (Horizonte 3 Años)")
 
@@ -196,13 +188,11 @@ col4.metric(
     delta=f"{roi_final_pct - 100:.1f}% vs Meta (100%)"
 )
 
-# ==============================================================================
-# 6. GRÁFICOS VISUALES: CURVA DE PAYBACK Y DESGLOSE DE COSTOS
-# ==============================================================================
+# Recuperación de la inversión y distribución de costos.
 g1, g2 = st.columns([3, 2])
 
 with g1:
-    # Gráfico de Payback: TCO Acumulado vs Beneficio Acumulado
+    # Compara el costo total y el ahorro acumulados.
     df_curva = pd.DataFrame({
         "Periodo": años,
         "Inversión Acumulada (TCO)": tco_acumulado,
@@ -237,9 +227,7 @@ with g2:
     )
     st.plotly_chart(fig_donut, use_container_width=True)
 
-# ==============================================================================
-# 7. TABLA DE DETALLE ANUALIZADO (DRILL-DOWN)
-# ==============================================================================
+# Desglose de resultados por año.
 st.markdown("---")
 st.subheader("🔍 Desglose Anual de Inversión y Retorno")
 

@@ -1,3 +1,5 @@
+"""Ejemplo de controles de Streamlit para explorar datos corporativos."""
+
 import streamlit as st
 import pandas as pd
 
@@ -12,28 +14,21 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    #st.header("Bienvenido al Dashboard de Análisis de Datos")
-    #st.subheader("Este dashboard permite explorar y analizar los datos de manera interactiva.")
-    #st.text("Utiliza los filtros en la barra lateral para personalizar la visualización de los datos.")
-    #st.success("¡Explora los datos y descubre insights valiosos!")
-    #st.warning("⚠️ Asegúrate de que los datos estén correctamente formateados antes de realizar análisis.")
-    #st.info("💡 Consejo: Puedes descargar los datos filtrados para un análisis más detallado.")
-    #st.error("❌ Error: Si encuentras algún problema, revisa los datos y la estructura del archivo CSV.") """
 
-    # Selectbox
+    # Selecciona la sección del análisis.
     opcion = st.selectbox(
         "Selecciona una opción:",
         ["Visualizar Datos", "Análisis Estadístico", "Gráficos Interactivos"]
     )
     
-    # Multiselect
+    # Selecciona las columnas que se mostrarán.
     opciones = st.multiselect(
         "Selecciona las columnas a mostrar:",
         df.columns.tolist(),
         default=None
     )
     
-    # Slider
+    # Selecciona el intervalo de edades.
     edad = st.slider(
         "Selecciona un rango de edad:",
         min_value=0,
@@ -42,7 +37,7 @@ def main():
         step=1,
     )
     
-    # Select slider
+    # Selecciona el nivel de ingresos.
     st.select_slider(
         "Selecciona un rango de ingresos:",
         options=[0, 10000, 20000, 30000, 40000, 50000],

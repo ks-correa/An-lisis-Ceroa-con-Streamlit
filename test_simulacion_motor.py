@@ -1,4 +1,6 @@
-﻿import unittest
+"""Verifica la equivalencia del motor con las fórmulas del simulador guía."""
+
+import unittest
 import pandas as pd
 from simulacion_motor import proyectar
 

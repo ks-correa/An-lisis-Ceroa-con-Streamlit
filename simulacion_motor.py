@@ -1,4 +1,4 @@
-﻿"""Proyección a tres años con la misma lógica del simulador guía."""
+"""Calcula costos y ahorro operativo acumulados durante tres años."""
 import pandas as pd
 
 CATEGORIAS = ["CapEx (Única Vez)", "OpEx Fijo", "OpEx Variable", "Mantenimiento"]

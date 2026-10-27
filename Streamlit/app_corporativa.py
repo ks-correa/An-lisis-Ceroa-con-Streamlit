@@ -1,8 +1,10 @@
+"""Tablero corporativo con filtros, indicadores y gráficos de ingresos."""
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Configuración del entorno de visualización
+# Configura la página de Streamlit.
 st.set_page_config(
     page_title="Executive BI Platform | Enterprise Analytics",
     page_icon="🏢",
@@ -16,33 +18,28 @@ st.markdown("---")
 
 @st.cache_data
 def cargar_datos():
-    """
-    Carga robusta del dataset corporativo:
-    - Autodetecta separador (coma, punto y coma, tabulador)
-    - Limpia caracteres BOM y espacios en blanco de las columnas
-    - Normaliza tipos numéricos y fechas con tolerancia a configuraciones regionales
-    """
+    """Carga el CSV corporativo, limpia sus columnas y calcula los márgenes."""
     archivo = "dataset_corporativo_tech.csv"
     
-    # 1. Detección automática del separador (soporta , y ;)
+    # Detecta el separador del archivo CSV.
     try:
-        # engine='python' con sep=None detecta automáticamente si viene de Excel o estándar
+        # Detecta el delimitador con el motor de Python.
         df = pd.read_csv(archivo, sep=None, engine="python", encoding="utf-8-sig")
     except Exception:
-        # Respaldo de contingencia si la codificación es Windows ANSI
+        # Reintenta la lectura con codificación Latin-1 y punto y coma.
         df = pd.read_csv(archivo, sep=";", encoding="latin1")
 
-    # Limpieza de espacios en blanco residuales en cabeceras
+    # Elimina espacios al inicio y al final de los encabezados.
     df.columns = df.columns.astype(str).str.strip()
 
-    # Validación preventiva de columnas requeridas
+    # Comprueba las columnas necesarias para el análisis.
     columnas_requeridas = ["Fecha", "Ingreso_USD", "COGS_USD", "Pais", "Sector_Industria"]
     columnas_faltantes = [col for col in columnas_requeridas if col not in df.columns]
     
     if columnas_faltantes:
         raise KeyError(f"Columnas faltantes: {columnas_faltantes}. Columnas leídas: {list(df.columns)}")
 
-    # Normalización de columnas numéricas (manejo de formato texto o coma decimal de Excel)
+    # Convierte importes de texto y comas decimales a números.
     for col in ["Ingreso_USD", "COGS_USD"]:
         if df[col].dtype == object:
             df[col] = (
@@ -54,10 +51,10 @@ def cargar_datos():
                 .astype(float)
             )
 
-    # Conversión estandarizada de fechas con tolerancia a formatos ambiguos
+    # Convierte las fechas; los valores inválidos quedan vacíos.
     df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
 
-    # Métricas derivadas a nivel de fila (Feature Engineering)
+    # Calcula el margen bruto y su porcentaje por transacción.
     df["Margen_Bruto_USD"] = df["Ingreso_USD"] - df["COGS_USD"]
     df["Margen_Pct"] = (df["Margen_Bruto_USD"] / df["Ingreso_USD"]) * 100
     

@@ -1,3 +1,5 @@
+"""Pantalla inicial del tablero de análisis de datos."""
+
 import streamlit as st
 
 st.set_page_config(

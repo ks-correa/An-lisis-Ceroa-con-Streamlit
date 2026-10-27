@@ -1,3 +1,5 @@
+"""Estilos y formato compartido de los gráficos del proyecto."""
+
 import streamlit as st
 
 
@@ -20,7 +22,7 @@ def aplicar_estilo():
 
 
 def mostrar_grafica(fig, moneda="COP", tipo="dinero", leyenda_anillo=False):
-    """Una etiqueta por punto, con contexto breve y unidades explícitas."""
+    """Aplica el formato común y muestra valores con sus unidades al pasar el cursor."""
     fig.update_layout(
         template="plotly_white", height=440,
         font=dict(family="Arial, sans-serif", size=12, color="#334155"),

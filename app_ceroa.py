@@ -1,4 +1,6 @@
-﻿import os
+"""Tablero de Ceroa con indicadores financieros y simulación de proveedores."""
+
+import os
 import math
 import zipfile
 import xml.etree.ElementTree as ET
@@ -7,7 +9,7 @@ import pandas as pd
 import plotly.express as px
 from dashboard_ui import aplicar_estilo, mostrar_grafica
 
-# Configuración del entorno de visualización (primera instrucción de Streamlit)
+# Configura la página antes de mostrar contenido.
 st.set_page_config(
     page_title="Ceroa BI | Plataforma de Bienestar Financiero",
     layout="wide",
@@ -21,11 +23,7 @@ st.markdown("---")
 
 
 def _leer_csv_robusto(ruta_archivo):
-    """
-    Lectura tolerante de archivos CSV:
-    - Autodetecta separador (coma, punto y coma, tabulador)
-    - Limpia caracteres BOM y espacios en blanco de las cabeceras
-    """
+    """Lee el CSV, detecta su separador y limpia los encabezados."""
     try:
         df = pd.read_csv(ruta_archivo, sep=None, engine="python", encoding="utf-8-sig")
     except Exception:
@@ -35,10 +33,7 @@ def _leer_csv_robusto(ruta_archivo):
 
 
 def _leer_hoja_excel_xml(ruta_excel, nombre_hoja):
-    """
-    Lector de respaldo nativo (sin dependencias adicionales) para hojas de un archivo .xlsx
-    en caso de que el entorno virtual no tenga instalado openpyxl.
-    """
+    """Lee los valores almacenados de una hoja XLSX mediante XML, sin openpyxl."""
     ns = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
     rel_ns = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
     with zipfile.ZipFile(ruta_excel) as z:
@@ -86,10 +81,7 @@ def _leer_hoja_excel_xml(ruta_excel, nombre_hoja):
 
 
 def _leer_hoja_excel(ruta_excel, nombre_hoja, columna_clave=None):
-    """
-    Lee una hoja del libro Excel usando pandas (openpyxl) o el lector XML de respaldo,
-    detectando automáticamente la fila de encabezado mediante 'columna_clave'.
-    """
+    """Lee una hoja y busca su encabezado entre las primeras diez filas."""
     try:
         df_raw = pd.read_excel(ruta_excel, sheet_name=nombre_hoja, header=None)
     except Exception:
@@ -116,9 +108,7 @@ def _leer_hoja_excel(ruta_excel, nombre_hoja, columna_clave=None):
 
 
 def _normalizar_numerico(df, columnas):
-    """
-    Normaliza columnas numéricas manejando formato texto, símbolo '$' o coma decimal.
-    """
+    """Convierte importes a números y sustituye los valores inválidos por cero."""
     for col in columnas:
         if col in df.columns:
             if df[col].dtype == object:
@@ -135,15 +125,7 @@ def _normalizar_numerico(df, columnas):
 
 @st.cache_data
 def cargar_datos():
-    """
-    Carga robusta de la base de datos de Ceroa:
-    - Lee los registros completos desde la carpeta 'datos/' (CSV)
-    - Lee las hojas de parámetros y catálogo ('Tarifas', 'Supuestos', 'Finanzas_Mes',
-      'Proveedores', 'Insumos') desde el archivo Excel de Ceroa
-    - Limpia nombres de columnas, convierte fechas y normaliza tipos numéricos
-    - Reproduce en Python los cálculos financieros de MRR, Recaudo, COGS, Margen Bruto y OPEX
-      a partir de la hoja 'Supuestos' para evitar celdas vacías de fórmulas de Excel
-    """
+    """Carga los CSV y parámetros de Excel, normaliza los datos y recalcula las finanzas."""
     carpeta_datos = "datos"
     archivos_csv = {
         "usuarios_mes": os.path.join(carpeta_datos, "usuarios_mes.csv"),
@@ -169,7 +151,7 @@ def cargar_datos():
                 "No se encontró 'Ceroa_Base_Datos_Recalculada.xlsx' ni 'Ceroa_Base_Datos.xlsx'."
             )
 
-    # 1. Carga de archivos CSV completos
+    # Carga de archivos CSV completos
     df_usuarios_mes = _leer_csv_robusto(archivos_csv["usuarios_mes"])
     df_actividad = _leer_csv_robusto(archivos_csv["actividad_mensual"])
     df_cobros = _leer_csv_robusto(archivos_csv["cobros"])
@@ -178,7 +160,7 @@ def cargar_datos():
     df_abonos = _leer_csv_robusto(archivos_csv["abonos_deuda"])
     df_adquisicion = _leer_csv_robusto(archivos_csv["adquisicion"])
 
-    # 2. Validación preventiva de columnas requeridas en los CSV principales
+    # Validación preventiva de columnas requeridas en los CSV principales
     validaciones_columnas = {
         "usuarios_mes.csv": (
             df_usuarios_mes,
@@ -215,7 +197,7 @@ def cargar_datos():
                 f"Columnas leídas: {list(df_val.columns)}"
             )
 
-    # 3. Carga de hojas de referencia desde el Excel ('Tarifas', 'Supuestos', 'Finanzas_Mes', 'Proveedores', 'Insumos')
+    # Carga las tarifas, supuestos, finanzas y catálogos del libro Excel.
     df_tarifas = _leer_hoja_excel(ruta_excel, "Tarifas", columna_clave="Plan")
     df_supuestos = _leer_hoja_excel(ruta_excel, "Supuestos", columna_clave="Variable")
     df_finanzas_excel = _leer_hoja_excel(ruta_excel, "Finanzas_Mes", columna_clave="mes")
@@ -270,7 +252,7 @@ def cargar_datos():
                     pass
     mrr_plus_anual = precio_plus_anual / meses_por_anio  # $299.000 / 12 = $24.916,67 COP
 
-    # 4. Normalización numérica y conversión de fechas
+    # Normalización numérica y conversión de fechas
     df_usuarios_mes = _normalizar_numerico(
         df_usuarios_mes,
         [
@@ -313,10 +295,10 @@ def cargar_datos():
     df_usuarios_mes["Fecha_Mes"] = pd.to_datetime(df_usuarios_mes["mes"] + "-01", errors="coerce")
     df_actividad["Fecha_Mes"] = pd.to_datetime(df_actividad["mes"] + "-01", errors="coerce")
 
-    # 5. Validaciones financieras sobre MRR por usuario-mes
-    # - Plan Cero: $0 COP
-    # - Plan Plus mensual: $29.900 COP
-    # - Plan Plus anual: $299.000 / 12 COP
+    # Asigna el ingreso mensual recurrente según el plan y las tarifas cargadas.
+    # El plan gratuito no genera ingresos recurrentes.
+    # El plan mensual aporta su tarifa mensual.
+    # La tarifa anual se distribuye entre los meses del año.
     df_usuarios_mes["mrr_equivalente_cop"] = 0.0
     df_usuarios_mes.loc[df_usuarios_mes["plan"] == "Plus mensual", "mrr_equivalente_cop"] = precio_plus_mensual
     df_usuarios_mes.loc[df_usuarios_mes["plan"] == "Plus anual", "mrr_equivalente_cop"] = mrr_plus_anual
@@ -330,7 +312,7 @@ def cargar_datos():
     )
     df_cobros["ciudad"] = df_cobros["usuario_id"].map(mapa_ciudad).fillna("Sin ciudad")
 
-    # 6. Reproducción exacta de la hoja 'Finanzas_Mes' usando 'Supuestos' y 'Actividad_Mensual'
+    # Recalcula las finanzas mensuales a partir de la actividad y los supuestos.
     # Auditoría de recaudo efectivo: exclusivamente transacciones con estado == 'Aprobado'
     cobros_aprob_mes = (
         df_cobros[df_cobros["estado"] == "Aprobado"]
@@ -354,7 +336,7 @@ def cargar_datos():
     )
     df_finanzas["ingreso_devengado_cop"] = df_finanzas["mrr_cop"]
 
-    # Cálculo detallado de COGS (Costos Directos) según 'Supuestos' e 'Insumos'
+    # Cálculo detallado de costos directos (COGS) según 'Supuestos' e 'Insumos'
     df_finanzas["aws_cop"] = (
         df_finanzas["usuarios_activos"].apply(lambda u: math.ceil(u / cap_servidor) if u > 0 else 0)
         * servidor_aws_usd
@@ -406,7 +388,7 @@ def cargar_datos():
     )
     df_finanzas["resultado_operativo_cop"] = df_finanzas["margen_bruto_cop"] - df_finanzas["opex_total_cop"]
 
-    # Indicadores unitarios complementarios (Conversión a Plus, CAC, Churn Plus)
+    # Indicadores unitarios complementarios (Conversión a Plus, CAC, cancelaciones de Plus)
     df_finanzas["conversion_a_plus_pct"] = df_finanzas.apply(
         lambda r: (r["usuarios_plus"] / r["usuarios_activos"] * 100.0) if r["usuarios_activos"] > 0 else 0.0,
         axis=1,
@@ -467,9 +449,7 @@ except Exception as e:
     st.error(f"Error inesperado al procesar los datos: {e}")
     st.stop()
 
-# ==============================================================================
-# BARRA LATERAL: FILTROS DE CONTROL MULTIDIMENSIONAL
-# ==============================================================================
+# Filtros del período, plan y ciudad.
 vista = st.sidebar.radio("Vista", ["Histórico", "Simulador a 3 años"])
 if vista == "Simulador a 3 años":
     from simulador_ceroa import mostrar_simulador
@@ -545,9 +525,7 @@ st.sidebar.markdown(
     "- **Ceroa Plus Anual:** $299.000 COP ($24.917/mes)"
 )
 
-# ==============================================================================
-# SECCIÓN 1: INDICADORES CLAVE DE GESTIÓN (C-SUITE SCORECARDS)
-# ==============================================================================
+# Indicadores financieros y de usuarios.
 st.subheader("Indicadores del período")
 
 if hay_segmentacion:
@@ -558,15 +536,15 @@ if hay_segmentacion:
         "backups, soporte, OPEX e inversión de marketing son costos compartidos de toda la operación."
     )
 
-# 1. MRR al cierre del período seleccionado
+# MRR al cierre del período seleccionado
 mrr_cierre = df_cierre_filtrado["mrr_equivalente_cop"].sum()
 
-# 2. Recaudo efectivo (exclusivamente transacciones con estado == 'Aprobado')
+# Recaudo efectivo (exclusivamente transacciones con estado == 'Aprobado')
 df_cobros_aprobados = df_cobros_filtrado[df_cobros_filtrado["estado"] == "Aprobado"]
 recaudo_efectivo = df_cobros_aprobados["importe_cop"].sum()
 total_tx_aprobadas = len(df_cobros_aprobados)
 
-# 3. COGS Directo y 4. Margen Bruto (globales del período sobre ingresos devengados compatibles)
+# COGS Directo y 4. Margen Bruto (globales del período sobre ingresos devengados compatibles)
 ingresos_devengados_periodo = df_finanzas_periodo["ingreso_devengado_cop"].sum()
 cogs_total_periodo = df_finanzas_periodo["cogs_total_cop"].sum()
 margen_bruto_cop = ingresos_devengados_periodo - cogs_total_periodo
@@ -576,7 +554,7 @@ margen_bruto_pct = (
     else 0.0
 )
 
-# 5. Usuarios activos únicos al cierre del período (diferenciando gratuitos y Plus)
+# Usuarios activos únicos al cierre del período (diferenciando gratuitos y Plus)
 usuarios_activos_cierre = df_cierre_filtrado["usuario_id"].nunique()
 usuarios_gratis_cierre = df_cierre_filtrado[df_cierre_filtrado["plan"] == "Cero"]["usuario_id"].nunique()
 usuarios_plus_cierre = df_cierre_filtrado[
@@ -612,7 +590,7 @@ c5.metric(
     delta=f"{usuarios_gratis_cierre:,} Cero | {usuarios_plus_cierre:,} Plus",
 )
 
-# Métricas ejecutivas complementarias: Conversión a Plus, Churn Plus, CAC y Resultado Operativo
+# Métricas ejecutivas complementarias: Conversión a Plus, cancelaciones de Plus, CAC y Resultado Operativo
 conversion_plus_cierre = (
     (usuarios_plus_cierre / usuarios_activos_cierre * 100.0)
     if usuarios_activos_cierre > 0
@@ -630,7 +608,7 @@ opex_periodo_cop = df_finanzas_periodo["opex_total_cop"].sum()
 resultado_operativo_cop = df_finanzas_periodo["resultado_operativo_cop"].sum()
 resultado_cierre_cop = float(fila_finanzas_cierre["resultado_operativo_cop"])
 
-# Cálculos de TCO (Total Cost of Ownership) y ROI (Return on Investment)
+# Calcula el costo total de propiedad (TCO) y el retorno de la inversión (ROI).
 tco_periodo_cop = cogs_total_periodo + opex_periodo_cop
 tco_cierre_cop = float(fila_finanzas_cierre["cogs_total_cop"] + fila_finanzas_cierre["opex_total_cop"])
 
@@ -682,9 +660,7 @@ k5.metric(
 
 st.markdown("---")
 
-# ==============================================================================
-# SECCIÓN 2: ANÁLISIS VISUAL DE RENDIMIENTO
-# ==============================================================================
+# Gráficos de ingresos, usuarios y costos.
 st.subheader("Evolución del negocio")
 st.caption("Pasa el cursor por un punto para ver su valor. Haz clic en una leyenda para mostrar u ocultar una serie.")
 col_graf1, col_graf2 = st.columns(2)
@@ -853,9 +829,7 @@ with col_graf4:
 
 st.markdown("---")
 
-# ==============================================================================
-# SECCIÓN 2.5: ANÁLISIS DE TCO, ROI, CURVA DE PAYBACK Y EVALUACIÓN DE PROVEEDORES
-# ==============================================================================
+# Costos totales, rentabilidad y recuperación de la inversión.
 st.subheader("Inversión y rentabilidad")
 st.caption("Los costos y las curvas acumuladas son globales del período. El ROI de caja compara el recaudo filtrado con los costos globales.")
 st.write(
@@ -889,7 +863,7 @@ r4.metric(
 col_payback, col_donut = st.columns([3, 2])
 
 with col_payback:
-    # Curva de Payback Mensual Acumulada: TCO Acumulado vs. Recaudo e Ingreso Devengado Acumulado
+    # Compara costos, recaudo e ingresos devengados acumulados por mes.
     df_payback = df_finanzas_periodo[["mes", "recaudo_cop", "ingreso_devengado_cop", "cogs_total_cop", "opex_total_cop"]].copy()
     df_payback["TCO_Mes_COP"] = df_payback["cogs_total_cop"] + df_payback["opex_total_cop"]
     df_payback["Costo total acumulado"] = df_payback["TCO_Mes_COP"].cumsum()
@@ -986,9 +960,7 @@ st.dataframe(pd.DataFrame(resumen_periodos), width="stretch", hide_index=True)
 
 st.markdown("---")
 
-# ==============================================================================
-# SECCIÓN 3: EXPLORADOR DE REGISTROS Y CATÁLOGO DE PROVEEDORES / INSUMOS
-# ==============================================================================
+# Registros y catálogos de proveedores e insumos.
 st.subheader("Detalle de usuarios y suscripciones")
 
 columnas_mostrar = [

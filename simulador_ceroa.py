@@ -1,3 +1,5 @@
+"""Interfaz del simulador de proveedores de Ceroa con valores en COP."""
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -62,10 +64,8 @@ def mostrar_simulador(datos):
 
     st.sidebar.info(f"**Usuarios Proyectados:**\n* Año 1: {u1:,}\n* Año 2: {u2:,}\n* Año 3: {u3:,}")
 
-    # ==============================================================================
-    # 3. TABLAS EDITABLES EN VIVO: CREACIÓN DINÁMICA DE ÍTEMS DE COSTO
-    # ==============================================================================
-    # Dataset base editable por defecto según proveedor seleccionado
+    # Costos editables por proveedor.
+    # Define los costos iniciales de cada proveedor.
     plantillas_defecto = {
         "Proveedor A: Arquitectura Serverless (AWS / Supabase)": [
             {"Concepto": "Setup Inicial y Migración Cloud", "Categoría": "CapEx (Única Vez)", "Costo Base Anual (COP)": 1800.0, "Costo Variable por Usuario (COP)": 0.00},
@@ -93,12 +93,12 @@ def mostrar_simulador(datos):
             item["Costo Base Anual (COP)"] *= trm
             item["Costo Variable por Usuario (COP)"] *= trm
 
-    # Inicialización del Session State para que las modificaciones no se borren
+    # Conserva los costos editados durante la sesión.
     clave_estado = f"guia_ceroa_items_{proveedor_activo}"
     if clave_estado not in st.session_state:
         st.session_state[clave_estado] = pd.DataFrame(plantillas_defecto[proveedor_activo])
 
-    # Mantener estable la base del editor durante sus reruns y restaurar al volver.
+    # Mantiene la base del editor al actualizar la página o cambiar de proveedor.
     if st.session_state.get("guia_ceroa_proveedor_anterior") != proveedor_activo:
         st.session_state["guia_ceroa_editor_base"] = st.session_state[clave_estado].copy()
         st.session_state["guia_ceroa_editor_version"] = st.session_state.get("guia_ceroa_editor_version", 0) + 1
@@ -106,7 +106,7 @@ def mostrar_simulador(datos):
 
     with st.expander("Ajustar costos del escenario", expanded=False):
         st.caption("Agrega o modifica costos; los indicadores y gr?ficas se recalculan al instante.")
-        # Componente interactivo para agregar y editar filas libremente
+        # Permite agregar y editar conceptos de costo.
         df_costos_editados = st.data_editor(
             st.session_state["guia_ceroa_editor_base"],
             key=f"guia_ceroa_editor_{st.session_state['guia_ceroa_editor_version']}",
@@ -132,12 +132,10 @@ def mostrar_simulador(datos):
             }
         )
 
-    # Guardar el resultado en un estado independiente del widget.
+    # Guarda los costos editados en un estado independiente del control.
     st.session_state[clave_estado] = df_costos_editados.copy()
 
-    # ==============================================================================
-    # 4. MOTOR MATEMÁTICO: CÁLCULO MULTIANUAL DE TCO Y BENEFICIOS
-    # ==============================================================================
+    # Cálculo de costos y ahorro acumulados.
     capex_total = df_costos_editados.loc[
         df_costos_editados["Categoría"] == "CapEx (Única Vez)", "Costo Base Anual (COP)"
     ].sum()
@@ -155,9 +153,7 @@ def mostrar_simulador(datos):
     beneficio_neto_total = beneficio_bruto_3_años - tco_final_3_años
     roi_final_pct = (beneficio_neto_total / tco_final_3_años) * 100 if tco_final_3_años > 0 else 0.0
 
-    # ==============================================================================
-    # 5. TARJETAS EJECUTIVAS (C-SUITE SCORECARDS)
-    # ==============================================================================
+    # Indicadores de inversión, costos y rentabilidad.
     st.markdown("---")
     st.subheader(proveedor_activo)
     st.caption("Misma lógica de la guía: beneficio = usuarios × ingreso anual por usuario × eficiencia. ROI = (beneficio acumulado − TCO) / TCO. Meta de comparación: 100% acumulado a tres años, como supuesto del ejercicio.")
@@ -183,13 +179,11 @@ def mostrar_simulador(datos):
         delta=f"{roi_final_pct - 100:.1f} p.p. vs Meta (100%)"
     )
 
-    # ==============================================================================
-    # 6. GRÁFICOS VISUALES: CURVA DE PAYBACK Y DESGLOSE DE COSTOS
-    # ==============================================================================
+    # Recuperación de la inversión y distribución de costos.
     g1, g2 = st.columns([3, 2])
 
     with g1:
-        # Gráfico de Payback: TCO Acumulado vs Beneficio Acumulado
+        # Compara el costo total y el ahorro acumulados.
         df_curva = pd.DataFrame({
             "Periodo": años,
             "Inversión Acumulada (TCO)": tco_acumulado,
@@ -224,9 +218,7 @@ def mostrar_simulador(datos):
         )
         mostrar_grafica(fig_donut, leyenda_anillo=True)
 
-    # ==============================================================================
-    # 7. TABLA DE DETALLE ANUALIZADO (DRILL-DOWN)
-    # ==============================================================================
+    # Desglose de resultados por año.
     st.markdown("---")
 
     df_resumen_anual = pd.DataFrame({
