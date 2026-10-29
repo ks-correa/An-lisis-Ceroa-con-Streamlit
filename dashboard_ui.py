@@ -1,6 +1,12 @@
 """Estilos y formato compartido de los gráficos del proyecto."""
 
 import streamlit as st
+from pathlib import Path
+
+
+def mostrar_guia_metricas():
+    with st.expander("Qué significa cada métrica y cada gráfica"):
+        st.markdown((Path(__file__).resolve().parent / "GUIA_METRICAS.md").read_text(encoding="utf-8"))
 
 
 def aplicar_estilo():

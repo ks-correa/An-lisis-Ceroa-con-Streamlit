@@ -5,6 +5,8 @@ import plotly.express as px
 import streamlit as st
 from dashboard_ui import mostrar_grafica
 from simulacion_motor import proyectar
+from metricas_ceroa import mostrar_metricas_negocio
+from dashboard_ui import mostrar_guia_metricas
 
 
 def mostrar_simulador(datos):
@@ -32,13 +34,13 @@ def mostrar_simulador(datos):
         key="sim_crecimiento_v2"
     )
     ingreso_anual_por_usuario = st.sidebar.number_input(
-        "Ingreso Anual por Usuario (COP):",
+        "Ingreso Anual por Usuario Plus (COP):",
         min_value=0.0,
         max_value=5000.0 * trm,
         value=299000.0,
         step=10000.0,
         key="sim_ingreso_anual_v2",
-        help="Supuesto editable: $299.000 al a?o, equivalente al precio anual Plus de referencia. No es ingreso mensual."
+        help="Ingreso por usuario pago al año. En el modelo original de ahorro se usa como ingreso de referencia para todos los usuarios."
     )
     ahorro_eficiencia_pct = st.sidebar.slider(
         "% Ahorro Operativo / Eficiencia Habilitada:",
@@ -169,12 +171,12 @@ def mostrar_simulador(datos):
         value=f"${tco_final_3_años:,.2f} COP"
     )
     col3.metric(
-        label="Beneficio Operativo Neto",
+        label="Ahorro neto de costos TI",
         value=f"${beneficio_neto_total:,.0f}",
         delta="Superávit" if beneficio_neto_total > 0 else "Déficit"
     )
     col4.metric(
-        label="ROI Estimado a 3 Años",
+        label="ROI por ahorro a 3 años",
         value=f"{roi_final_pct:.1f}%",
         delta=f"{roi_final_pct - 100:.1f} p.p. vs Meta (100%)"
     )
@@ -227,11 +229,16 @@ def mostrar_simulador(datos):
         "Costo Anual Total (COP)": [f"${costo:,.2f}" for costo in tco_anual],
         "TCO Acumulado (COP)": [f"${costo_acum:,.2f}" for costo_acum in tco_acumulado],
         "Beneficio Acumulado (COP)": [f"${ben:,.2f}" for ben in ingresos_acumulados],
-        "Utilidad Neta Acumulada (COP)": [f"${ingresos_acumulados[i] - tco_acumulado[i]:,.2f}" for i in range(3)]
+        "Ahorro Neto Acumulado (COP)": [f"${ingresos_acumulados[i] - tco_acumulado[i]:,.2f}" for i in range(3)]
     })
 
     with st.expander("Ver desglose anual", expanded=False):
         st.dataframe(df_resumen_anual, width="stretch", hide_index=True)
     with st.expander("Supuestos de la simulación", expanded=False):
-        st.write("Inicio: 100 usuarios; crecimiento anual: 20%; ingreso anual por usuario: $299.000 COP; eficiencia: 15%. Son supuestos editables del ejercicio. La fórmula de ROI y la meta del 100% acumulado a tres años son las de la guía.")
+        st.write(f"Inicio: {usuarios_año_1:,} usuarios; crecimiento anual: {crecimiento_anual_pct}%; ingreso anual por usuario Plus: ${ingreso_anual_por_usuario:,.0f} COP; eficiencia: {ahorro_eficiencia_pct}%. Son supuestos editables del ejercicio. El ROI por ahorro conserva el modelo original: aplica la eficiencia sobre el ingreso de referencia de todos los usuarios y compara ese ahorro con el costo TI. No es el ROI por suscripciones que aparece abajo.")
         st.write(f"Costos ilustrativos de la guía, convertidos a COP con TRM de referencia {trm:,.0f}. El anillo muestra los costos base por categoría; los variables por usuario se incluyen en el TCO.")
+
+    st.caption("La curva anterior compara ahorro por eficiencia con costos TI. Su anillo representa costos base: no es la distribución del TCO de tres años. El beneficio por eficiencia no se suma al ingreso por suscripciones.")
+    mostrar_metricas_negocio(plantillas_defecto, proveedor_activo, usuarios_año_1,
+                            crecimiento_anual_pct, ingreso_anual_por_usuario)
+    mostrar_guia_metricas()

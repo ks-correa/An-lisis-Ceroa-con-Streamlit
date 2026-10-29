@@ -2,10 +2,36 @@
 
 import unittest
 import pandas as pd
-from simulacion_motor import proyectar
+from simulacion_motor import proyectar, proyectar_negocio
 
 
 class ProyeccionTest(unittest.TestCase):
+    def test_negocio_ingresos_costos_y_capex(self):
+        costos = pd.DataFrame([
+            {"Categoría": "CapEx (Única Vez)", "Costo Base Anual (COP)": 1000, "Costo Variable por Usuario (COP)": 0},
+            {"Categoría": "OpEx Fijo", "Costo Base Anual (COP)": 100, "Costo Variable por Usuario (COP)": 2},
+            {"Categoría": "Mantenimiento", "Costo Base Anual (COP)": 200, "Costo Variable por Usuario (COP)": 1},
+        ])
+        tabla = proyectar_negocio(costos, 100, 20, 299000, conversion=50,
+                                 cobro=80, marketing=500, otros_opex=300)
+        self.assertEqual(tabla["Usuarios Activos"].tolist(), [100, 120, 144])
+        self.assertEqual(tabla["Usuarios Plus"].tolist(), [50, 60, 72])
+        self.assertEqual(tabla["Ingreso devengado (COP)"].sum(), 54418000)
+        self.assertEqual(tabla["COGS (COP)"].tolist(), [300, 340, 388])
+        self.assertEqual(tabla["CapEx (COP)"].tolist(), [1000, 0, 0])
+        self.assertEqual(tabla["OPEX (COP)"].tolist(), [1100, 1120, 1144])
+        self.assertEqual(tabla.iloc[0]["Neto caja (COP)"], 14950000 * .8 - 2400)
+        self.assertEqual(tabla.iloc[0]["Resultado operativo (COP)"], 14950000 - 1400)
+
+    def test_churn_se_repone_y_roi_sin_costos(self):
+        from metricas_ceroa import resumir
+        costos = pd.DataFrame(columns=["Categoría", "Costo Base Anual (COP)", "Costo Variable por Usuario (COP)"])
+        tabla = proyectar_negocio(costos, 100, 20, 299000, churn_mensual=10)
+        self.assertAlmostEqual(tabla.iloc[1]["Altas Plus estimadas"], 20 + 100 * (1 - .9 ** 12))
+        self.assertEqual(tabla["Ingreso devengado (COP)"].sum(), 108836000)
+        self.assertIsNone(resumir(tabla)["ROI caja (%)"])
+        self.assertIsNone(resumir(tabla)["ROI TI (%)"])
+
     def test_equivalencia_guia(self):
         costos = pd.DataFrame([
             {"Categoría": "CapEx (Única Vez)", "Costo Base Anual (COP)": 1800, "Costo Variable por Usuario (COP)": 0},

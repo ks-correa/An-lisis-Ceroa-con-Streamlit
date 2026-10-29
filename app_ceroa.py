@@ -1,13 +1,14 @@
 """Tablero de Ceroa con indicadores financieros y simulación de proveedores."""
 
 import os
+from pathlib import Path
 import math
 import zipfile
 import xml.etree.ElementTree as ET
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from dashboard_ui import aplicar_estilo, mostrar_grafica
+from dashboard_ui import aplicar_estilo, mostrar_grafica, mostrar_guia_metricas
 
 # Configura la página antes de mostrar contenido.
 st.set_page_config(
@@ -126,7 +127,8 @@ def _normalizar_numerico(df, columnas):
 @st.cache_data
 def cargar_datos():
     """Carga los CSV y parámetros de Excel, normaliza los datos y recalcula las finanzas."""
-    carpeta_datos = "datos"
+    carpeta_proyecto = Path(__file__).resolve().parent
+    carpeta_datos = carpeta_proyecto / "datos"
     archivos_csv = {
         "usuarios_mes": os.path.join(carpeta_datos, "usuarios_mes.csv"),
         "actividad_mensual": os.path.join(carpeta_datos, "actividad_mensual.csv"),
@@ -141,15 +143,10 @@ def cargar_datos():
         if not os.path.exists(ruta):
             raise FileNotFoundError(f"No se encontró el archivo requerido: '{ruta}'.")
 
-    # Localización del libro Excel (acepta nombre recalculado o nombre base)
-    ruta_excel = "Ceroa_Base_Datos_Recalculada.xlsx"
+    # Libro de parámetros de Ceroa.
+    ruta_excel = carpeta_proyecto / "Ceroa_Base_Datos_Recalculada.xlsx"
     if not os.path.exists(ruta_excel):
-        if os.path.exists("Ceroa_Base_Datos.xlsx"):
-            ruta_excel = "Ceroa_Base_Datos.xlsx"
-        else:
-            raise FileNotFoundError(
-                "No se encontró 'Ceroa_Base_Datos_Recalculada.xlsx' ni 'Ceroa_Base_Datos.xlsx'."
-            )
+        raise FileNotFoundError(f"No se encontró el archivo requerido: '{ruta_excel}'.")
 
     # Carga de archivos CSV completos
     df_usuarios_mes = _leer_csv_robusto(archivos_csv["usuarios_mes"])
@@ -526,6 +523,7 @@ st.sidebar.markdown(
 )
 
 # Indicadores financieros y de usuarios.
+mostrar_guia_metricas()
 st.subheader("Indicadores del período")
 
 if hay_segmentacion:
